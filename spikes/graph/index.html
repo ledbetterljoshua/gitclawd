@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Git Graph Spike</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1e1e2e;
+      color: #cdd6f4;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #graph-container {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+    }
+
+    #graph-canvas {
+      display: block;
+    }
+
+    #sidebar {
+      width: 350px;
+      background: #181825;
+      border-left: 1px solid #313244;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    #sidebar h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #89b4fa;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #commit-details {
+      font-size: 13px;
+    }
+
+    #commit-details .empty {
+      color: #6c7086;
+      font-style: italic;
+    }
+
+    #commit-details .field {
+      margin-bottom: 12px;
+    }
+
+    #commit-details .label {
+      color: #6c7086;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    #commit-details .value {
+      word-break: break-all;
+    }
+
+    #commit-details .hash {
+      font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+      color: #fab387;
+    }
+
+    #commit-details .message {
+      color: #cdd6f4;
+      font-weight: 500;
+    }
+
+    #commit-details .author {
+      color: #a6e3a1;
+    }
+
+    #commit-details .date {
+      color: #94e2d5;
+    }
+
+    #commit-details .refs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    #commit-details .ref {
+      background: #45475a;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    #commit-details .ref.head {
+      background: #f38ba8;
+      color: #1e1e2e;
+    }
+
+    #commit-details .ref.branch {
+      background: #89b4fa;
+      color: #1e1e2e;
+    }
+
+    #commit-details .ref.remote {
+      background: #a6e3a1;
+      color: #1e1e2e;
+    }
+
+    #instructions {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(24, 24, 37, 0.9);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #6c7086;
+      border: 1px solid #313244;
+    }
+  </style>
+</head>
+<body>
+  <div id="graph-container">
+    <canvas id="graph-canvas"></canvas>
+  </div>
+  <div id="sidebar">
+    <h2>Commit Details</h2>
+    <div id="commit-details">
+      <div class="empty">Click a commit to view details</div>
+    </div>
+  </div>
+  <div id="instructions">
+    Click on a commit node to select it
+  </div>
+
+  <script>
+    // ============================================
+    // Git Graph Visualization Spike
+    // ============================================
+
+    // Configuration
+    const CONFIG = {
+      nodeRadius: 8,
+      rowHeight: 40,
+      laneWidth: 24,
+      leftPadding: 80,
+      topPadding: 30,
+      textOffset: 20,
+      colors: [
+        '#89b4fa', // blue
+        '#a6e3a1', // green
+        '#fab387', // peach
+        '#f38ba8', // red
+        '#cba6f7', // mauve
+        '#94e2d5', // teal
+        '#f9e2af', // yellow
+        '#eba0ac', // maroon
+      ]
+    };
+
+    // State
+    let commits = [];
+    let selectedCommit = null;
+    let commitPositions = new Map(); // hash -> {x, y, lane}
+
+    // Parse the git log data (will be injected by the loader script)
+    function parseGitLog(rawLog) {
+      const lines = rawLog.trim().split('\n').filter(l => l);
+      return lines.map(line => {
+        const [hash, parents, message, author, date, refs] = line.split('|');
+        return {
+          hash,
+          shortHash: hash.substring(0, 7),
+          parents: parents ? parents.split(' ').filter(p => p) : [],
+          message,
+          author,
+          date,
+          refs: refs ? refs.split(', ').filter(r => r).map(parseRef) : []
+        };
+      });
+    }
+
+    function parseRef(ref) {
+      ref = ref.trim();
+      if (ref.startsWith('HEAD -> ')) {
+        return { type: 'head', name: ref.replace('HEAD -> ', '') };
+      } else if (ref.startsWith('origin/')) {
+        return { type: 'remote', name: ref };
+      } else if (ref === 'HEAD') {
+        return { type: 'head', name: 'HEAD' };
+      } else {
+        return { type: 'branch', name: ref };
+      }
+    }
+
+    // Lane assignment algorithm
+    // Goal: assign each commit to a lane (column) such that:
+    // 1. Parent-child relationships don't cross unnecessarily
+    // 2. Lanes are reused when possible
+    function assignLanes(commits) {
+      const hashToCommit = new Map(commits.map(c => [c.hash, c]));
+      const lanes = []; // lanes[i] = hash of commit currently "owning" lane i, or null
+      const commitLanes = new Map(); // hash -> lane number
+
+      // Process from newest to oldest
+      for (const commit of commits) {
+        let assignedLane = -1;
+
+        // Check if any parent is in a lane we can reuse
+        for (const parentHash of commit.parents) {
+          if (commitLanes.has(parentHash)) {
+            const parentLane = commitLanes.get(parentHash);
+            // Check if this lane is still "free" (parent is the owner)
+            if (lanes[parentLane] === parentHash) {
+              assignedLane = parentLane;
+              break;
+            }
+          }
+        }
+
+        // If no parent lane available, find first free lane
+        if (assignedLane === -1) {
+          assignedLane = lanes.findIndex(l => l === null);
+          if (assignedLane === -1) {
+            assignedLane = lanes.length;
+            lanes.push(null);
+          }
+        }
+
+        // Assign this commit to the lane
+        commitLanes.set(commit.hash, assignedLane);
+        lanes[assignedLane] = commit.hash;
+
+        // Free up lanes where this commit is the last user
+        // (i.e., if we're a parent and our children have passed)
+        for (let i = 0; i < lanes.length; i++) {
+          const ownerHash = lanes[i];
+          if (ownerHash && ownerHash !== commit.hash) {
+            const owner = hashToCommit.get(ownerHash);
+            if (owner && owner.parents.includes(commit.hash)) {
+              // This lane's owner has us as parent, lane stays active
+            } else {
+              // Check if owner is above current commit
+              const ownerIdx = commits.findIndex(c => c.hash === ownerHash);
+              const currentIdx = commits.findIndex(c => c.hash === commit.hash);
+              if (ownerIdx < currentIdx) {
+                // Owner is newer, check if all its parents are processed
+                const owner = hashToCommit.get(ownerHash);
+                if (owner) {
+                  const allParentsProcessed = owner.parents.every(p => {
+                    const pIdx = commits.findIndex(c => c.hash === p);
+                    return pIdx <= currentIdx;
+                  });
+                  if (allParentsProcessed && !owner.parents.includes(commit.hash)) {
+                    // Can free this lane if no path goes through it
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return commitLanes;
+    }
+
+    // Better lane assignment - simpler approach
+    function assignLanesSimple(commits) {
+      const commitLanes = new Map();
+      const activeLanes = new Map(); // lane -> set of ancestor hashes that need this lane
+      const hashToCommit = new Map(commits.map(c => [c.hash, c]));
+      let maxLane = 0;
+
+      // Build child -> parent relationships
+      const children = new Map();
+      for (const commit of commits) {
+        for (const parent of commit.parents) {
+          if (!children.has(parent)) {
+            children.set(parent, []);
+          }
+          children.get(parent).push(commit.hash);
+        }
+      }
+
+      // Process from newest to oldest
+      for (let i = 0; i < commits.length; i++) {
+        const commit = commits[i];
+
+        // Check if any child already claimed a lane for us
+        let lane = -1;
+        for (const [l, ancestors] of activeLanes) {
+          if (ancestors.has(commit.hash)) {
+            lane = l;
+            ancestors.delete(commit.hash);
+            if (ancestors.size === 0) {
+              activeLanes.delete(l);
+            }
+            break;
+          }
+        }
+
+        // If no lane claimed, find first free lane
+        if (lane === -1) {
+          for (let l = 0; l <= maxLane + 1; l++) {
+            if (!activeLanes.has(l)) {
+              lane = l;
+              break;
+            }
+          }
+        }
+
+        maxLane = Math.max(maxLane, lane);
+        commitLanes.set(commit.hash, lane);
+
+        // Register our parents in this lane (or new lanes for merges)
+        for (let p = 0; p < commit.parents.length; p++) {
+          const parentHash = commit.parents[p];
+          const parentLane = p === 0 ? lane : findFreeLane(activeLanes, maxLane);
+          maxLane = Math.max(maxLane, parentLane);
+
+          if (!activeLanes.has(parentLane)) {
+            activeLanes.set(parentLane, new Set());
+          }
+          activeLanes.get(parentLane).add(parentHash);
+        }
+      }
+
+      return commitLanes;
+    }
+
+    function findFreeLane(activeLanes, maxLane) {
+      for (let l = 0; l <= maxLane + 1; l++) {
+        if (!activeLanes.has(l)) {
+          return l;
+        }
+      }
+      return maxLane + 1;
+    }
+
+    // Calculate positions for all commits
+    function calculatePositions(commits) {
+      const lanes = assignLanesSimple(commits);
+      const positions = new Map();
+
+      for (let i = 0; i < commits.length; i++) {
+        const commit = commits[i];
+        const lane = lanes.get(commit.hash) || 0;
+        positions.set(commit.hash, {
+          x: CONFIG.leftPadding + lane * CONFIG.laneWidth,
+          y: CONFIG.topPadding + i * CONFIG.rowHeight,
+          lane,
+          color: CONFIG.colors[lane % CONFIG.colors.length]
+        });
+      }
+
+      return positions;
+    }
+
+    // Render the graph
+    function render(canvas, ctx) {
+      const dpr = window.devicePixelRatio || 1;
+
+      // Calculate required canvas size
+      const maxLane = Math.max(...Array.from(commitPositions.values()).map(p => p.lane));
+      const width = Math.max(
+        canvas.parentElement.clientWidth,
+        CONFIG.leftPadding + (maxLane + 1) * CONFIG.laneWidth + 600
+      );
+      const height = CONFIG.topPadding + commits.length * CONFIG.rowHeight + 40;
+
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.scale(dpr, dpr);
+
+      // Clear
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw connections first (behind nodes)
+      for (const commit of commits) {
+        const pos = commitPositions.get(commit.hash);
+        if (!pos) continue;
+
+        for (const parentHash of commit.parents) {
+          const parentPos = commitPositions.get(parentHash);
+          if (!parentPos) continue;
+
+          ctx.beginPath();
+          ctx.strokeStyle = pos.color;
+          ctx.lineWidth = 2;
+
+          if (pos.lane === parentPos.lane) {
+            // Straight line
+            ctx.moveTo(pos.x, pos.y);
+            ctx.lineTo(parentPos.x, parentPos.y);
+          } else {
+            // Curved line for branch/merge
+            const midY = (pos.y + parentPos.y) / 2;
+            ctx.moveTo(pos.x, pos.y);
+            ctx.bezierCurveTo(
+              pos.x, midY,
+              parentPos.x, midY,
+              parentPos.x, parentPos.y
+            );
+          }
+          ctx.stroke();
+        }
+      }
+
+      // Draw nodes
+      for (const commit of commits) {
+        const pos = commitPositions.get(commit.hash);
+        if (!pos) continue;
+
+        const isSelected = selectedCommit && selectedCommit.hash === commit.hash;
+
+        // Node circle
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, CONFIG.nodeRadius, 0, Math.PI * 2);
+        ctx.fillStyle = isSelected ? '#f5e0dc' : pos.color;
+        ctx.fill();
+
+        if (isSelected) {
+          ctx.strokeStyle = '#f5e0dc';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+
+        // Draw refs (branches/tags)
+        let refX = pos.x + CONFIG.textOffset;
+        for (const ref of commit.refs) {
+          const text = ref.name;
+          ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+          const textWidth = ctx.measureText(text).width;
+
+          // Ref background
+          let bgColor = '#45475a';
+          let textColor = '#cdd6f4';
+          if (ref.type === 'head') {
+            bgColor = '#f38ba8';
+            textColor = '#1e1e2e';
+          } else if (ref.type === 'branch') {
+            bgColor = '#89b4fa';
+            textColor = '#1e1e2e';
+          } else if (ref.type === 'remote') {
+            bgColor = '#a6e3a1';
+            textColor = '#1e1e2e';
+          }
+
+          ctx.fillStyle = bgColor;
+          roundRect(ctx, refX, pos.y - 8, textWidth + 10, 16, 4);
+          ctx.fill();
+
+          ctx.fillStyle = textColor;
+          ctx.fillText(text, refX + 5, pos.y + 4);
+
+          refX += textWidth + 16;
+        }
+
+        // Commit message
+        ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillStyle = isSelected ? '#f5e0dc' : '#cdd6f4';
+        const messageX = commit.refs.length > 0 ? refX : pos.x + CONFIG.textOffset;
+        ctx.fillText(commit.message, messageX, pos.y + 4);
+
+        // Short hash
+        const hashX = messageX + ctx.measureText(commit.message).width + 12;
+        ctx.font = '11px SF Mono, Menlo, monospace';
+        ctx.fillStyle = '#6c7086';
+        ctx.fillText(commit.shortHash, hashX, pos.y + 4);
+      }
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    // Hit detection
+    function getCommitAtPoint(x, y) {
+      for (const commit of commits) {
+        const pos = commitPositions.get(commit.hash);
+        if (!pos) continue;
+
+        const dx = x - pos.x;
+        const dy = y - pos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance <= CONFIG.nodeRadius + 4) {
+          return commit;
+        }
+      }
+      return null;
+    }
+
+    // Update sidebar with commit details
+    function showCommitDetails(commit) {
+      const container = document.getElementById('commit-details');
+
+      if (!commit) {
+        container.innerHTML = '<div class="empty">Click a commit to view details</div>';
+        return;
+      }
+
+      const refsHtml = commit.refs.length > 0
+        ? commit.refs.map(r => `<span class="ref ${r.type}">${r.name}</span>`).join('')
+        : '<span style="color: #6c7086;">None</span>';
+
+      container.innerHTML = `
+        <div class="field">
+          <div class="label">Hash</div>
+          <div class="value hash">${commit.hash}</div>
+        </div>
+        <div class="field">
+          <div class="label">Message</div>
+          <div class="value message">${commit.message}</div>
+        </div>
+        <div class="field">
+          <div class="label">Author</div>
+          <div class="value author">${commit.author}</div>
+        </div>
+        <div class="field">
+          <div class="label">Date</div>
+          <div class="value date">${commit.date}</div>
+        </div>
+        <div class="field">
+          <div class="label">Parents</div>
+          <div class="value hash">${commit.parents.length > 0 ? commit.parents.map(p => p.substring(0, 7)).join(', ') : 'None (root)'}</div>
+        </div>
+        <div class="field">
+          <div class="label">Refs</div>
+          <div class="value refs">${refsHtml}</div>
+        </div>
+      `;
+    }
+
+    // Initialize
+    async function init() {
+      const canvas = document.getElementById('graph-canvas');
+      const ctx = canvas.getContext('2d');
+
+      // Load git data
+      try {
+        const response = await fetch('git-data.json');
+        const rawLog = await response.text();
+        commits = parseGitLog(rawLog.trim());
+      } catch (e) {
+        console.error('Failed to load git-data.json:', e);
+        document.body.innerHTML = `
+          <div style="padding: 40px; color: #f38ba8;">
+            <h1>Error loading git data</h1>
+            <p>Make sure to run: <code>./generate-data.sh</code> first</p>
+            <p>Error: ${e.message}</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Calculate positions
+      commitPositions = calculatePositions(commits);
+
+      // Initial render
+      render(canvas, ctx);
+
+      // Handle clicks
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const commit = getCommitAtPoint(x, y);
+        selectedCommit = commit;
+        showCommitDetails(commit);
+        render(canvas, ctx);
+      });
+
+      // Handle hover (cursor change)
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const commit = getCommitAtPoint(x, y);
+        canvas.style.cursor = commit ? 'pointer' : 'default';
+      });
+
+      // Handle resize
+      window.addEventListener('resize', () => {
+        render(canvas, ctx);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

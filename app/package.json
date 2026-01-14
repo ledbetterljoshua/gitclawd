@@ -1,0 +1,73 @@
+{
+  "name": "gitclawd",
+  "version": "0.1.0",
+  "description": "Git client with Claude AI integration",
+  "author": "Joshua Ledbetter",
+  "type": "module",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "electron": "electron .",
+    "electron:dev": "NODE_ENV=development electron .",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:linux": "npm run build && electron-builder --linux"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-markdown": "^10.1.0"
+  },
+  "devDependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.7",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.4.0",
+    "express": "^5.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "zod": "^4.3.5"
+  },
+  "build": {
+    "appId": "com.gitclawd.app",
+    "productName": "GitClawd",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "!node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../web",
+        "to": "server",
+        "filter": ["**/*", "!node_modules/**/*"]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "build/icon.icns",
+      "target": ["dmg", "zip"]
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Development"
+    },
+    "dmg": {
+      "title": "${productName} ${version}",
+      "backgroundColor": "#0d0d0d"
+    }
+  }
+}

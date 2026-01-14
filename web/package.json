@@ -1,0 +1,14 @@
+{
+  "name": "gitclawd-web",
+  "version": "0.1.0",
+  "description": "GitClawd web interface",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.7",
+    "express": "^4.21.0",
+    "zod": "^4.3.5"
+  }
+}

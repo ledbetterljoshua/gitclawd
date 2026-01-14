@@ -1,0 +1,200 @@
+/*
+ * GitClawd Design System
+ * A warm, approachable dark theme inspired by Claude's personality
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /*
+   * Color Philosophy:
+   * Warm charcoals instead of cold blue-blacks
+   * Claude's coral/terracotta as the soul of the interface
+   * Soft, inviting, never harsh
+   */
+
+  /* Backgrounds - warm undertones */
+  --bg-void: #0f0d0b;
+  --bg-base: #151311;
+  --bg-surface: #1c1a17;
+  --bg-raised: #242220;
+  --bg-overlay: #2d2a27;
+  --bg-hover: #353230;
+
+  /* Borders - warm grays */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-focus: var(--accent);
+
+  /* Text - cream tones, not pure white */
+  --text-primary: #f5f0eb;
+  --text-secondary: #b8b0a8;
+  --text-muted: #7d756d;
+  --text-ghost: #524b44;
+
+  /* Accent - Claude's warm coral */
+  --accent: #e07a5f;
+  --accent-hover: #d4694e;
+  --accent-soft: #c96a52;
+  --accent-muted: rgba(224, 122, 95, 0.5);
+  --accent-bg: rgba(224, 122, 95, 0.12);
+  --accent-glow: rgba(224, 122, 95, 0.25);
+
+  /* Secondary accent - warm gold */
+  --gold: #d4a574;
+  --gold-muted: rgba(212, 165, 116, 0.5);
+
+  /* Semantic - softer versions */
+  --success: #7cb984;
+  --success-bg: rgba(124, 185, 132, 0.12);
+  --warning: #d4a574;
+  --warning-bg: rgba(212, 165, 116, 0.12);
+  --error: #c96a6a;
+  --error-bg: rgba(201, 106, 106, 0.12);
+  --info: #7aa2c9;
+
+  /* Diff colors - gentle, not glaring */
+  --diff-add-line: rgba(124, 185, 132, 0.1);
+  --diff-add-word: rgba(124, 185, 132, 0.25);
+  --diff-add-text: #7cb984;
+  --diff-del-line: rgba(201, 106, 106, 0.1);
+  --diff-del-word: rgba(201, 106, 106, 0.25);
+  --diff-del-text: #c96a6a;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+  /* Font sizes */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  /* Shadows - warm tones */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px var(--accent-glow);
+
+  /* Lane colors for commit graph - warm palette */
+  --lane-1: #e07a5f;  /* coral */
+  --lane-2: #7cb984;  /* sage */
+  --lane-3: #d4a574;  /* gold */
+  --lane-4: #7aa2c9;  /* sky */
+  --lane-5: #c9a0dc;  /* lavender */
+  --lane-6: #7cc9c9;  /* teal */
+  --lane-7: #c9c97a;  /* lime */
+  --lane-8: #c97a9e;  /* rose */
+
+  /* Transitions */
+  --transition-fast: 0.1s ease;
+  --transition-base: 0.15s ease;
+  --transition-slow: 0.25s ease;
+}
+
+/* Reset with intention */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+}
+
+/* Focus states - visible and beautiful */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-bg);
+  color: var(--text-primary);
+}
+
+/* Scrollbar - minimal, warm */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Code blocks base */
+code, pre {
+  font-family: var(--font-mono);
+}
+
+/* Button reset */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Input reset */
+input, textarea {
+  font-family: inherit;
+  border: none;
+  background: none;
+  outline: none;
+}

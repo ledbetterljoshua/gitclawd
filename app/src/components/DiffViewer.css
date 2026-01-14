@@ -1,0 +1,332 @@
+/*
+ * DiffViewer Component Styles
+ * Clean diff viewing with proper scrolling
+ */
+
+.diff-panel {
+  background: var(--bg-base);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Commit info bar */
+.commit-info-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.commit-info-bar.working {
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--warning-bg) 100%);
+}
+
+.commit-info-bar .hash {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.commit-info-bar .hash:hover {
+  background: var(--accent-muted);
+}
+
+.commit-info-bar .message {
+  font-weight: 500;
+  font-size: var(--text-sm);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commit-info-bar .author,
+.commit-info-bar .date {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.commit-info-bar .refs {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.ref-tag {
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+}
+
+.ref-tag.head {
+  background: var(--accent);
+  color: white;
+}
+
+/* Diff content area - THE SINGLE SCROLL CONTAINER */
+.diff-content-area {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.diff-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  gap: var(--space-4);
+}
+
+.diff-empty svg {
+  color: var(--text-ghost);
+}
+
+.diff-empty p {
+  font-size: var(--text-sm);
+}
+
+/* Diff files container */
+.diff-files {
+  min-width: max-content;
+}
+
+/* Individual file section */
+.diff-file-section {
+  border-bottom: 1px solid var(--border-default);
+}
+
+.diff-file-section:last-child {
+  border-bottom: none;
+}
+
+/* File header - sticky within scroll container */
+.diff-file-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.status-indicator {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.status-indicator.added {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.status-indicator.deleted {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.status-indicator.modified {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.status-indicator.renamed {
+  background: rgba(122, 162, 201, 0.12);
+  color: var(--info);
+}
+
+.diff-file-header .file-path {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.diff-file-header .file-stats {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+}
+
+.diff-file-header .file-stats .additions {
+  color: var(--success);
+}
+
+.diff-file-header .file-stats .deletions {
+  color: var(--error);
+}
+
+.language-badge {
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  text-transform: lowercase;
+}
+
+/* File content wrapper */
+.diff-file-content {
+  background: var(--bg-base);
+}
+
+/* Hunk */
+.diff-hunk {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.diff-hunk:last-child {
+  border-bottom: none;
+}
+
+.hunk-header {
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Hunk lines container */
+.hunk-lines {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Diff lines - table row layout for alignment */
+.diff-line {
+  display: table-row;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+}
+
+.diff-line.add {
+  background: var(--diff-add-line);
+}
+
+.diff-line.del {
+  background: var(--diff-del-line);
+}
+
+.diff-line.context {
+  background: transparent;
+}
+
+.diff-line:hover {
+  filter: brightness(0.97);
+}
+
+/* Line numbers */
+.diff-line .line-num {
+  display: table-cell;
+  width: 50px;
+  min-width: 50px;
+  padding: 0 var(--space-2);
+  text-align: right;
+  color: var(--text-ghost);
+  background: var(--bg-surface);
+  user-select: none;
+  vertical-align: top;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.diff-line .line-num.old {
+  border-right: none;
+}
+
+.diff-line .line-num.new {
+  border-right: 1px solid var(--border-subtle);
+}
+
+/* Line prefix (+/-/space) */
+.diff-line .line-prefix {
+  display: table-cell;
+  width: 20px;
+  min-width: 20px;
+  padding: 0 var(--space-1);
+  text-align: center;
+  user-select: none;
+  vertical-align: top;
+}
+
+.diff-line.add .line-prefix {
+  color: var(--success);
+}
+
+.diff-line.del .line-prefix {
+  color: var(--error);
+}
+
+.diff-line.context .line-prefix {
+  color: var(--text-ghost);
+}
+
+/* Line content - NO individual scroll */
+.diff-line .line-content {
+  display: table-cell;
+  padding: 0 var(--space-3);
+  white-space: pre;
+  vertical-align: top;
+}
+
+.diff-line.add .line-content {
+  color: var(--diff-add-text);
+}
+
+.diff-line.del .line-content {
+  color: var(--diff-del-text);
+}
+
+.diff-line.context .line-content {
+  color: var(--text-secondary);
+}
+
+/* Scrollbar styling */
+.diff-content-area::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.diff-content-area::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+
+.diff-content-area::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+.diff-content-area::-webkit-scrollbar-thumb:hover {
+  background: var(--text-ghost);
+}
+
+.diff-content-area::-webkit-scrollbar-corner {
+  background: var(--bg-surface);
+}

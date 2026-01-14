@@ -1,0 +1,139 @@
+/*
+ * Header Component Styles
+ * Clean, minimal header with warm accent
+ */
+
+.header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-5);
+  /* Leave room for macOS traffic lights in electron */
+  padding-left: 80px;
+  height: 52px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  -webkit-app-region: drag;
+}
+
+.header button,
+.header .header-btn {
+  -webkit-app-region: no-drag;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.logo-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.logo-text {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+/* Header button */
+.header-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: all var(--transition-base);
+}
+
+.header-btn:hover {
+  background: var(--bg-overlay);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.header-btn svg {
+  opacity: 0.7;
+}
+
+.header-btn:hover svg {
+  opacity: 1;
+}
+
+/* Center section - repo info */
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.repo-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.repo-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.repo-path {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.no-repo {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* Right section */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Branch indicator */
+.branch-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-muted);
+  border-radius: var(--radius-md);
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.branch-indicator svg {
+  opacity: 0.8;
+}

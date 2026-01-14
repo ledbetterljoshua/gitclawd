@@ -1,0 +1,69 @@
+{
+  "project": "gitclawd-build",
+  "description": "Building GitClawd - a GitKraken clone with Claude at its heart. Each item is a feature or design task to complete.",
+  "paths": {
+    "web": "/Users/joshualedbetter/gitclawd/web",
+    "design": "/Users/joshualedbetter/gitclawd/design"
+  },
+  "categories": {
+    "design": "Design system, layout architecture, visual decisions",
+    "feature": "Feature implementation",
+    "polish": "Refinement and polish tasks"
+  },
+  "items": [
+    {
+      "id": "design-system",
+      "category": "design",
+      "name": "Design System & Layout Architecture",
+      "description": "Create design system with colors, typography, spacing. Define layout architecture. See /Users/joshualedbetter/gitclawd/ralph/DESIGN_BRIEF.md for context. Use /frontend-design skill. Output: /Users/joshualedbetter/gitclawd/design/DESIGN_SYSTEM.md and /Users/joshualedbetter/gitclawd/design/LAYOUT.md",
+      "passes": true,
+      "discovered_at": "2026-01-14T00:00:00Z",
+      "audited_at": "2026-01-14T12:00:00Z",
+      "finding": "Created comprehensive DESIGN_SYSTEM.md with CSS variables for colors (dark theme), typography scale, spacing system, border radii, shadows, transitions, and component patterns (buttons, inputs, panels, badges, chat messages, diff viewer styles). Created LAYOUT.md with three-column layout architecture (graph/diff/claude), panel specifications, responsive breakpoints, keyboard navigation, and empty/loading states."
+    },
+    {
+      "id": "diff-viewer",
+      "category": "feature",
+      "name": "Proper Diff Viewer",
+      "description": "Build a good diff viewer - the main value prop. Side-by-side or unified view, syntax highlighting, line numbers. This is P0.",
+      "passes": true,
+      "discovered_at": "2026-01-14T00:00:00Z",
+      "audited_at": "2026-01-14T18:30:00Z",
+      "finding": "Implemented comprehensive diff viewer with: (1) Unified view with dual line number columns (old/new), (2) Side-by-side split view with synchronized lines, (3) Syntax highlighting via highlight.js supporting 40+ languages with automatic detection from file extension, (4) Word-level diff highlighting showing specific changed words within modified lines, (5) File list with status badges (M/A/D/R) and click-to-navigate, (6) Language detection badge in file headers, (7) Proper hunk headers with context info. Tested in browser with real git repository."
+    },
+    {
+      "id": "file-tree",
+      "category": "feature",
+      "name": "File Tree in Diff Panel",
+      "description": "Show list of changed files in a commit, click to view that file's diff",
+      "passes": true,
+      "discovered_at": "2026-01-14T00:00:00Z",
+      "audited_at": "2026-01-14T20:15:00Z",
+      "finding": "Implemented hierarchical file tree view in the diff panel with: (1) Toggle between flat list and tree views using ≡/▼ buttons, (2) Tree view groups files by directory with collapsible folders, (3) Directory nodes show ▼ expand/collapse icon with smooth rotation animation, (4) File count badges on each directory, (5) Proper indentation for nested levels, (6) Click directories to expand/collapse, (7) Click files to navigate to diff and highlight selection, (8) Both views maintain file selection state and status badges (M/A/D/R). Tested in browser with ai-retry repo showing src/internal/ and src/retryables/ subdirectories."
+    },
+    {
+      "id": "working-changes",
+      "category": "feature",
+      "name": "Working Changes Diff",
+      "description": "Show uncommitted changes (staged and unstaged) in the diff viewer",
+      "passes": false,
+      "discovered_at": "2026-01-14T00:00:00Z"
+    },
+    {
+      "id": "graph-merges",
+      "category": "polish",
+      "name": "Graph Merge Visualization",
+      "description": "Handle merge commits properly in the graph - show merge lines connecting branches",
+      "passes": false,
+      "discovered_at": "2026-01-14T00:00:00Z"
+    },
+    {
+      "id": "gitkraken-research",
+      "category": "design",
+      "name": "GitKraken UI/UX Research",
+      "description": "Deep dive into GitKraken's UI layout and features. Use web search and their docs to understand: (1) Their panel layout and information hierarchy, (2) How they handle the graph vs diff balance, (3) Key UX patterns (keyboard shortcuts, selection, navigation), (4) What makes their UI feel polished and professional. Output findings to /Users/joshualedbetter/gitclawd/design/GITKRAKEN_RESEARCH.md with specific recommendations for GitClawd.",
+      "passes": false,
+      "discovered_at": "2026-01-14T00:00:00Z"
+    }
+  ]
+}
