@@ -21,6 +21,7 @@ function App() {
   const [isClaudeLoading, setIsClaudeLoading] = useState(false)
   const [recentRepos] = useState<string[]>([]) // Could persist to localStorage
   const diffViewerRef = useRef<DiffViewerHandle>(null)
+  const initialLoadDone = useRef(false)
 
   // Panel state
   const [leftPanelWidth, setLeftPanelWidth] = useState(320)
@@ -122,6 +123,18 @@ function App() {
       console.error('Failed to open repo:', err)
     }
   }, [])
+
+  // Check for repo path in URL query string on mount
+  useEffect(() => {
+    if (initialLoadDone.current) return
+    initialLoadDone.current = true
+
+    const params = new URLSearchParams(window.location.search)
+    const repoParam = params.get('repo')
+    if (repoParam) {
+      openRepo(repoParam)
+    }
+  }, [openRepo])
 
   const selectCommit = useCallback(async (commit: Commit) => {
     setSelectedCommit(commit)

@@ -253,7 +253,7 @@ export default function ClaudePanel({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={repoPath ? "Ask Claude about this repository..." : "Open a repository first..."}
+          placeholder={repoPath ? "Ask Claude..." : "Open a repository first..."}
           rows={1}
           disabled={isLoading || !repoPath}
         />
